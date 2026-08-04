@@ -6,6 +6,7 @@ import MetricCard from '../components/MetricCard';
 import GlassCard from '../components/GlassCard';
 import { CipherAreaChart, CipherRadarChart } from '../components/CipherChart';
 import api from '../lib/api';
+import { Link } from 'react-router-dom';
 
 const RADAR_IDEAL = [
   { metric: 'Entropy', value: 99.9, ideal: 100 },
@@ -118,11 +119,11 @@ export default function DashboardPage() {
           <h3 className="text-white font-semibold mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             {QUICK_ACTIONS.map(({ to, icon: Icon, label, desc, color }) => (
-              <a key={to} href={to} className="glass rounded-xl p-4 border border-white/5 hover:border-emerald-500/20 transition-all duration-200 group cursor-pointer block">
+              <Link key={to} to={to} className="glass rounded-xl p-4 border border-white/5 hover:border-emerald-500/20 transition-all duration-200 group cursor-pointer block">
                 <Icon size={20} className={`${color} mb-2 group-hover:scale-110 transition-transform`} />
                 <p className="text-white text-sm font-semibold">{label}</p>
                 <p className="text-gray-500 text-xs mt-0.5">{desc}</p>
-              </a>
+              </Link>
             ))}
           </div>
         </GlassCard>
