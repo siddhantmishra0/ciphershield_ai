@@ -25,9 +25,36 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://ciphershield-ai.vercel.app'
+];
+
+if (process.env.CLIENT_URL) {
+  const clientUrl = process.env.CLIENT_URL.replace(/\/$/, '');
+  if (!allowedOrigins.includes(clientUrl)) {
+    allowedOrigins.push(clientUrl);
+  }
+}
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, postman, or curl)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.includes(origin) ||
+      origin.startsWith('http://localhost:') ||
+      /^https:\/\/ciphershield-ai-.*\.vercel\.app$/.test(origin);
+      
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
+  optionsSuccessStatus: 200
 }));
 
 // Rate limiting
