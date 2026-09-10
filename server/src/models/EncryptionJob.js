@@ -18,7 +18,7 @@ const encryptionJobSchema = new mongoose.Schema({
   },
   matrixSize: {
     type: Number,
-    enum: [2, 3, 4, 8],
+    enum: [2, 3, 4, 8, 16, 32, 64],
     default: 4
   },
   rounds: {
