@@ -100,7 +100,13 @@ export default function ImageEncryptPage() {
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
-          const base64 = btoa(String.fromCharCode(...new Uint8Array(e.target.result)));
+          const bytes = new Uint8Array(e.target.result);
+          let binary = '';
+          const CHUNK = 8192;
+          for (let i = 0; i < bytes.length; i += CHUNK) {
+            binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+          }
+          const base64 = btoa(binary);
           const { data } = await api.post('/encrypt/decrypt-image', {
             encryptedData: base64,
             masterKey,

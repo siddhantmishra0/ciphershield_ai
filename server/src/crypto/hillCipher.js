@@ -316,11 +316,11 @@ function spnRound(block, matrix, n, perm, roundNum, encrypt) {
     data = shifted;
   } else {
     // Reverse order
-    // 4. Unmix (reverse the forward rotation: out[(i+shift)%L]=in[i] → out[i]=in[(i-shift+L)%L])
+    // 4. Unmix (invert: enc[(i+shift)%L]=plain[i] → plain[i]=enc[(i+shift)%L])
     const shift = roundNum % data.length || 1;
     const unshifted = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
-      unshifted[i] = data[(i - shift + data.length) % data.length];
+      unshifted[i] = data[(i + shift) % data.length];
     }
     data = unshifted;
     // 3. Inverse matrix transformation
