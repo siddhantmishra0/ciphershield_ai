@@ -155,32 +155,49 @@ function matInverse(A, n, mod) {
 // DYNAMIC KEY GENERATION
 // ============================================================
 
+// Expand key material in counter-mode: H(seed || counter) for each block.
+// This is deterministic, fast, and produces as many bytes as needed.
+function expandKeyMaterial(seed, bytesNeeded) {
+  const blocks = [];
+  let total = 0;
+  let counter = 0;
+  while (total < bytesNeeded) {
+    const counterBuf = Buffer.alloc(4);
+    counterBuf.writeUInt32BE(counter);
+    const block = crypto.createHash('sha512').update(Buffer.concat([seed, counterBuf])).digest();
+    blocks.push(block);
+    total += block.length;
+    counter++;
+  }
+  return Buffer.concat(blocks).slice(0, bytesNeeded);
+}
+
 export function generateDynamicKey(masterKey, matrixSize = 4, timestamp = Date.now(), nonce = null, salt = null) {
   if (!nonce) nonce = crypto.randomBytes(16).toString('hex');
   if (!salt) salt = crypto.randomBytes(16).toString('hex');
 
   const combined = `${masterKey}:${timestamp}:${nonce}:${salt}`;
-  const hash = crypto.createHash('sha512').update(combined).digest('hex');
-
-  // Try to build an invertible matrix using hash bytes
   const n = matrixSize;
+
+  // Use expanded key material for any size
+  const seedHash = crypto.createHash('sha512').update(combined).digest();
+  // Each attempt uses n*n bytes; provide enough for 20 attempts
+  const keyBytes = expandKeyMaterial(seedHash, n * n * 20 + 64);
+
   let matrix = null;
   let attempt = 0;
-  
-  const maxOffset = (hash.length / 2) - (n * n);
 
   while (!matrix && attempt < 20) {
-    const offset = maxOffset > 0 ? (attempt * n * n) % maxOffset : 0;
+    const offset = attempt * n * n;
     const candidate = [];
     for (let i = 0; i < n; i++) {
       const row = [];
       for (let j = 0; j < n; j++) {
-        const byteVal = parseInt(hash.slice((offset + i * n + j) * 2, (offset + i * n + j) * 2 + 2), 16);
-        row.push((byteVal % (PRIME_MOD - 1)) + 1); // 1..256
+        const byteVal = keyBytes[offset + i * n + j];
+        row.push((byteVal % (PRIME_MOD - 1)) + 1); // 1..255
       }
       candidate.push(row);
     }
-    // Ensure invertibility
     const det = matDet(candidate, n, PRIME_MOD);
     if (det !== 0 && modInverse(det, PRIME_MOD) !== null) {
       matrix = candidate;
@@ -188,10 +205,10 @@ export function generateDynamicKey(masterKey, matrixSize = 4, timestamp = Date.n
     attempt++;
   }
 
-  // Fallback: identity-ish matrix
+  // Fallback: identity-ish matrix using first available bytes
   if (!matrix) {
     matrix = Array.from({ length: n }, (_, i) =>
-      Array.from({ length: n }, (_, j) => i === j ? (parseInt(hash.slice(i * 2, i * 2 + 2), 16) % 254 + 2) : (i + j + 1) % PRIME_MOD)
+      Array.from({ length: n }, (_, j) => i === j ? ((keyBytes[i] % 254) + 2) : (i + j + 1) % PRIME_MOD)
     );
   }
 

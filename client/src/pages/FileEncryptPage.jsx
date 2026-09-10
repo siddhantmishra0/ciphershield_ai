@@ -117,7 +117,7 @@ export default function FileEncryptPage() {
               <div>
                 <label className="block text-xs text-gray-400 mb-2 font-mono uppercase">Matrix Size</label>
                 <select value={matrixSize} onChange={e => setMatrixSize(Number(e.target.value))} className="input-cyber">
-                  {[2,3,4,8].map(s => <option key={s} value={s}>{s}×{s}</option>)}
+                  {[2,3,4,8,16,32,64].map(s => <option key={s} value={s}>{s}×{s}</option>)}
                 </select>
               </div>
               <div>

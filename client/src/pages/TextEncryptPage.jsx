@@ -7,7 +7,7 @@ import StrengthMeter from '../components/StrengthMeter';
 import api from '../lib/api';
 import { useEncryptionStore } from '../store/encryptionStore';
 
-const MATRIX_SIZES = [2, 3, 4, 8];
+const MATRIX_SIZES = [2, 3, 4, 8, 16, 32, 64];
 const ROUNDS = [2, 4, 8, 16];
 
 export default function TextEncryptPage() {
